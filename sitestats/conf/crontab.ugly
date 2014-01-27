@@ -9,4 +9,4 @@
 PATH=/usr/local/bin:/usr/bin:/bin
 MAILTO=sitestats@mysociety.org
 
-# 43 9 * * mon !!(*= $user *)!! /data/vhost/!!(*= $vhost *)!!/mysociety/sitestats/bin/send_mails.py --verbose
+# 43 9 * * mon !!(*= $user *)!! /data/vhost/!!(*= $vhost *)!!/internal/sitestats/bin/send_mails.py --verbose
