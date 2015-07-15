@@ -44,7 +44,7 @@ while ($vhostsFilename){
 my @st = stat $vhostsFilename;
 my %vh = %$vhosts if $vhosts; # $vhosts is declared in vhosts.pl
 my %vhostsByServer; # to contain: e.g., 'balti' => ['dave.fixmystreet.com', 'gut.dave.thingummy']
-my ($totalVhosts, %vhostsByName, %productionVhosts);
+my ($totalVhosts, %vhostsByName, %productionVhosts, %vhostsByDatabase, %productionDatabases);
 
 foreach my $vhost (sort keys %vh) {
     my $hRef = $vh{$vhost};
@@ -60,6 +60,14 @@ foreach my $vhost (sort keys %vh) {
 	$productionVhosts{$vhost}++ unless $vhostData{"staging"};
         $vhostsByName{$vhost}++;
         $uniqueServers{$server}++;
+    }
+    foreach my $db (sort @{$vhostData{"databases"}}) {
+        if ($vhostsByDatabase{$db}) {
+            push @{$vhostsByDatabase{$db}}, $vhost;
+        } else {
+            $vhostsByDatabase{$db} = [ $vhost ];
+        }
+        $productionDatabases{$db}++ unless $vhostData{"staging"};
     }
 }
 
@@ -109,9 +117,19 @@ foreach my $server (sort keys %uniqueServers){
     my $cDatabases = @databasesOnThisServer;
     if ($cDatabases){
         say(($cDatabases-1?"$cDatabases databases are":"Only one database is") . " configured on $server:");
+        say("<table id='db-table'>");
+        say("<tr><th>Name</th><th>Type</th><th>Vhosts</th></tr>");
+
         foreach (sort @databasesOnThisServer){
-          say("   * $_ <span class='db-type'>[$databaseTypeByName{$_}]</span>");
+          say("<tr>");
+          my $b = '*' if $productionDatabases{$_};
+          say("<td>$b$_$b</td>");
+          say("<td>$b$databaseTypeByName{$_}$b</td>");
+          my @vhostsOnThisDatabase = map { $productionVhosts{$_} ? "$b$_$b" : $_ } @{$vhostsByDatabase{$_}};
+          say("<td>".join ("<br/>", @vhostsOnThisDatabase)."</td>");
+          say("</tr>");
         } 
+        say("</table>");
     } else {
         say("No databases running on this server.")
     }
@@ -177,8 +195,10 @@ __DATA__
 	@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/style.css');
 	@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/colors.css');
 	@import url("https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/print.css");
-	.db-type{color:#cccccc;padding-left:1em;}
-	.db-type:hover{color:#666666;}
+    table#db-table tr:nth-child(even){background-color: #ddd;}
+    table#db-table table,th,td{padding:5px;border:1px solid black;vertical-align:top;}
+    table#db-table th{text-align:left;}
+    table{border-collapse:collapse; font-size:100%;}
 	.vhosts-col{float:left; width:45%;}
 	body{margin-top:10px;}
 </style>
