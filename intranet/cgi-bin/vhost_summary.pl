@@ -8,6 +8,9 @@
 # script by dave@mysociety.org
 #------------------------------------------------------------------------------
 
+use strict;
+use warnings;
+
 my $contentType = "html"; # set "html" for standalone page, or "plain" for inclusion in TWiki
 
 my @vhostsFilenames = ("/data/vhosts.pl", "./vhosts.pl"); # try in this order: useful for testing
@@ -23,19 +26,19 @@ my $totalServers = 0;
 print "Content-type: text/$contentType\n\n";
 
 my $vhostsFilename = shift @vhostsFilenames;
-while ($vhostsFilename){
-    if ($return = do $vhostsFilename) {
+while ($vhostsFilename) {
+    if (my $return = do $vhostsFilename) {
         last;
     } else {
         my @problems;
         push @problems, "Couldn't parse =$vhostsFilename= &mdash; $@\n" if $@;
         push @problems, "Couldn't do =$vhostsFilename= &mdash; $!\n" unless defined $return;
         push @problems, "Couldn't run =$vhostsFilename=\n" unless $return;
-        if (@problems){
+        if (@problems) {
             say("---++ Problem (sorry, $0 failed)\n");
             say("   * $_") foreach @problems;
         }
-        if ($vhostsFilename = shift @vhostsFilenames){
+        if ($vhostsFilename = shift @vhostsFilenames) {
             say("   * <span style='background:#ff0000;color:#ffffff;padding:4px;'>now trying $vhostsFilename instead...</span>");
         }
     }
@@ -47,27 +50,19 @@ my %vhostsByServer; # to contain: e.g., 'balti' => ['dave.fixmystreet.com', 'gut
 my ($totalVhosts, %vhostsByName, %productionVhosts, %vhostsByDatabase, %productionDatabases);
 
 foreach my $vhost (sort keys %vh) {
-    my $hRef = $vh{$vhost};
-    my %vhostData = %$hRef;
-    my $aRef = $vhostData{"servers"};
+    my $vhostData = $vh{$vhost};
+    my $aRef = $vhostData->{servers};
     my @servers = @$aRef if ref $aRef eq 'ARRAY';
     $vhostsByName{$vhost} ||= 0;
-    foreach my $server (@servers){ # because a vhost may be deployed on more than one server
-        $aRef = $vhostsByServer{$server};
-        my @vhostsOnThisServer = $aRef? @$aRef : ();
-        push @vhostsOnThisServer, $vhost;        
-        $vhostsByServer{$server}=\@vhostsOnThisServer;
-	$productionVhosts{$vhost}++ unless $vhostData{"staging"};
+    foreach my $server (@servers) { # because a vhost may be deployed on more than one server
+        push @{$vhostsByServer{$server}}, $vhost;
+	    $productionVhosts{$vhost}++ unless $vhostData->{staging};
         $vhostsByName{$vhost}++;
         $uniqueServers{$server}++;
     }
-    foreach my $db (sort @{$vhostData{"databases"}}) {
-        if ($vhostsByDatabase{$db}) {
-            push @{$vhostsByDatabase{$db}}, $vhost;
-        } else {
-            $vhostsByDatabase{$db} = [ $vhost ];
-        }
-        $productionDatabases{$db}++ unless $vhostData{"staging"};
+    foreach my $db (@{$vhostData->{databases}}) {
+        push @{$vhostsByDatabase{$db}}, $vhost;
+        $productionDatabases{$db}++ unless $vhostData->{staging};
     }
 }
 
@@ -76,22 +71,16 @@ my %databasesByServer; # to contain: e.g., 'balti' => ['dbfoo', 'dbbar']
 my (%databasesByName, %databaseTypeByName);
 
 foreach my $db (sort keys %db) {
-    my $hRef = $db{$db};
-    my %databaseData = %$hRef;
-    my $host = $databaseData{"host"};
-    $databaseTypeByName{$db}=$databaseData{"type"};
-    $databasesByName{$db} ||= 0;
-    $aRef = $databasesByServer{$host};
-    my @databasesOnThisServer = $aRef? @$aRef : ();
-    push @databasesOnThisServer, $db;        
-    $databasesByServer{$host}=\@databasesOnThisServer;
+    my $host = $db{$db}->{host};
+    $databaseTypeByName{$db} = $db{$db}->{type};
+    push @{$databasesByServer{$host}}, $db;
     $databasesByName{$db}++;
     $uniqueServers{$host}++;
 }
 
 my @report;
 
-foreach my $server (sort keys %uniqueServers){ 
+foreach my $server (sort keys %uniqueServers) {
     $totalServers++;
     say("---++ $server");
 
@@ -99,50 +88,50 @@ foreach my $server (sort keys %uniqueServers){
     my $aRef = $vhostsByServer{$server};
     my @vhostsOnThisServer = @$aRef if $aRef;
     my $cVhosts = @vhostsOnThisServer;
-    if ($cVhosts){
-        say(($cVhosts-1?"$cVhosts vhosts are":"Only one vhost is") . " configured on $server:");
-        foreach (sort @vhostsOnThisServer){
-          my $b = '*' if $productionVhosts{$_};
+    if ($cVhosts) {
+        say(($cVhosts-1 ? "$cVhosts vhosts are" : "Only one vhost is") . " configured on $server:");
+        foreach (sort @vhostsOnThisServer) {
+          my $b = $productionVhosts{$_} ? '*' : '';
           say("   * $b$_$b");
           $totalVhosts++;
-        } 
+        }
     } else {
         say("No vhosts running on this server.")
     }
-    say("</div>");    
+    say("</div>");
 
     say("<div class='vhosts-col'>");
     $aRef = $databasesByServer{$server};
     my @databasesOnThisServer = @$aRef if $aRef;
     my $cDatabases = @databasesOnThisServer;
-    if ($cDatabases){
-        say(($cDatabases-1?"$cDatabases databases are":"Only one database is") . " configured on $server:");
+    if ($cDatabases) {
+        say(($cDatabases-1 ? "$cDatabases databases are" : "Only one database is") . " configured on $server:");
         say("<table id='db-table'>");
         say("<tr><th>Name</th><th>Type</th><th>Vhosts</th></tr>");
 
-        foreach (sort @databasesOnThisServer){
+        foreach (sort @databasesOnThisServer) {
           say("<tr>");
-          my $b = '*' if $productionDatabases{$_};
+          my $b = $productionDatabases{$_} ? '*' : '';
           say("<td>$b$_$b</td>");
           say("<td>$b$databaseTypeByName{$_}$b</td>");
           my @vhostsOnThisDatabase = map { $productionVhosts{$_} ? "$b$_$b" : $_ } @{$vhostsByDatabase{$_}};
           say("<td>".join ("<br/>", @vhostsOnThisDatabase)."</td>");
           say("</tr>");
-        } 
+        }
         say("</table>");
     } else {
         say("No databases running on this server.")
     }
     say("</div>");
-    say("<div style='clear:both;height:1px'></div>");    
+    say("<div style='clear:both;height:1px'></div>");
 }
 
 my $totalUniqueDatabases = keys %databasesByName;
 my @homelessVhosts;
 my $totalUniqueVhosts = 0;
 
-foreach (sort keys %vhostsByName){
-    if ($vhostsByName{$_}){
+foreach (sort keys %vhostsByName) {
+    if ($vhostsByName{$_}) {
         $totalUniqueVhosts++
     } else {
         push @homelessVhosts, $_
@@ -150,31 +139,37 @@ foreach (sort keys %vhostsByName){
 }
 my $cProductionSites = scalar keys %productionVhosts;
 my $selfLink = qq{ | <a href="$0" target="_top">click for full page</a>};
-say("=$vhostsFilename parsed at " . gmtime() . "=" . $selfLink) if $vhostsFilename; 
-presay("Results generated from $vhostsFilename (last updated ".localtime(@st[9]).")");
+say("=$vhostsFilename parsed at " . gmtime() . "=" . $selfLink) if $vhostsFilename;
+presay("Results generated from $vhostsFilename (last updated ".localtime($st[9]).")");
 presay("Vhosts declared but not on any server: " . join(", ", @homelessVhosts)) if @homelessVhosts;
 presay("Total: $totalVhosts vhosts ($totalUniqueVhosts unique, $cProductionSites production) and $totalUniqueDatabases databases configured across $totalServers servers. $selfLink");
 presay("---+ vhosts.pl summary");
 
 my $report = join "\n", @report;
-my $html = do {local $/;<DATA>};
-$html=~s/%CONTENT%/$report\n$1/;
+my $html = do { local $/; <DATA>; };
+$html =~ s/%CONTENT%/$report\n$&/;
 print $html;
 
-sub presay{unshift @report, twiki2html(shift)}
-sub say{push @report, twiki2html(shift)}
+# ---
 
-sub twiki2html{
+sub presay {
+    unshift @report, twiki2html(shift);
+}
+sub say {
+    push @report, twiki2html(shift);
+}
+
+sub twiki2html {
     my $line = shift;
     return $line if $contentType ne "html";
     $line =~ s/=((\/|\.|\w)[^=]*)=(?=\s)/<code>$1<\/code>/g;
     $line =~ s/\*(\S.*?)\*/<b>$1<\/b>/g;
-    if ($line=~/^   \*(.*)/){
+    if ($line =~ /^   \*(.*)/) {
         $line = "<li> $1 </li>";
         $line = "<ul style='margin-top:8px;'>\n$line" unless $isInList;
         $isInList++
     } else {
-        if ($line=~/^---(\++)(.*)/){
+        if ($line =~ /^---(\++)(.*)/) {
             my $h = length $1;
             $line = "<h$h> $2 </h$h>"
         } else {
