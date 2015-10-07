@@ -52,6 +52,12 @@ my ($totalVhosts, %vhostsByName, %productionVhosts, %vhostsByDatabase, %producti
 foreach my $vhost (sort keys %vh) {
     my $vhostData = $vh{$vhost};
     my $aRef = $vhostData->{servers};
+
+    my %redirects = map { $_ => 1 } @{ $vhostData->{redirects} };
+    if ($redirects{$vhost}) {
+        $vhost = $vhostData->{aliases}[0];
+    }
+
     my @servers = @$aRef if ref $aRef eq 'ARRAY';
     $vhostsByName{$vhost} ||= 0;
     foreach my $server (@servers) { # because a vhost may be deployed on more than one server
