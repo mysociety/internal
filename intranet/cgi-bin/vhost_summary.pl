@@ -192,10 +192,6 @@ __DATA__
 <head>
 <title>summary of vhosts.pl</title>
 <style type="text/css" media="all">
-	@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/layout.css');
-	@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/style.css');
-	@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/colors.css');
-	@import url("https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/print.css");
     table#db-table tr:nth-child(even){background-color: #ddd;}
     table#db-table table,th,td{padding:5px;border:1px solid black;vertical-align:top;}
     table#db-table th{text-align:left;}

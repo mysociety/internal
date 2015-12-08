@@ -34,8 +34,6 @@ Content-type: text/html
 <html>
 <head><title>Support emails</title>
 <style>
-	\@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/style.css');
-	\@import url('https://secure.mysociety.org/intranet/pub/TWiki/PatternSkin/colors.css');
 	tr:hover { background-color: #ffff99; }
 abbr { border-bottom: dotted 1px black; }
 table { border-collapse: collapse; }
