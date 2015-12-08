@@ -9,7 +9,7 @@ my $isInList = 0;
 our $vhosts;
 our $databases;
 
-open(FP, '/home/intranet/google-apps.html');
+open(FP, '/home/wiki/google-apps.html');
 my $content = join("", <FP>);
 
 my $html = do {local $/;<DATA>};
