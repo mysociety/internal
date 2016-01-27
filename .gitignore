@@ -2,3 +2,5 @@ general
 general.deployed
 down.html
 wiki/web/mediawiki
+wiki/conf/general.yml
+wiki/conf/general.yml.deployed
