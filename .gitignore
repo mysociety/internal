@@ -6,3 +6,4 @@ intranet/conf/httpd.conf.deployed
 wiki/web/mediawiki
 wiki/conf/general.yml
 wiki/conf/general.yml.deployed
+*.pyc
