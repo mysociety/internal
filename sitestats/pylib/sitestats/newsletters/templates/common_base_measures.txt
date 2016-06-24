@@ -1,3 +1,0 @@
-Stats for mySociety sites from {{ week_start }} to {{ week_end }}
---------------------------------------------------------------
-{{ summary_table }}
