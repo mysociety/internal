@@ -1,2 +1,0 @@
-#!/usr/bin/perl
-exec("/usr/lib/cgi-bin/twiki/$0");

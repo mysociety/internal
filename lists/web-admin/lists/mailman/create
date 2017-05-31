@@ -1,7 +1,0 @@
-#!/bin/sh
-script=$( basename $0 )
-dir=$( dirname $0 )
-. $dir/../../../conf/mailman
-HTTP_HOST=${MAILMAN_USE_HTTP_HOST:-$HTTP_HOST} \
-    PYTHONPATH=$MAILMAN_CGI_PYTHONPATH \
-    exec $MAILMAN_CGI_PYTHON $MAILMAN_CGI_DIR/driver $script
